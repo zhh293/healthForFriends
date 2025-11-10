@@ -3,32 +3,46 @@
     <!-- 顶部标题栏 -->
     <WorkoutHeader />
 
-    <!-- 健身计划列表 -->
-    <WorkoutList
-      :workouts="workouts"
-      @toggle-complete="handleToggleComplete"
-      @edit="handleEdit"
-      @delete="handleDelete"
-    />
+    <!-- 视图模式切换 -->
+    <div class="view-toggle">
+      <button :class="['toggle-btn', viewMode === 'daily' ? 'active' : '']" @click="viewMode = 'daily'">每日</button>
+      <button :class="['toggle-btn', viewMode === 'weekly' ? 'active' : '']" @click="viewMode = 'weekly'">每周</button>
+    </div>
 
-    <!-- 添加按钮 -->
-    <AddWorkoutButton @click="openAddModal" />
+    <!-- 每日视图 -->
+    <template v-if="viewMode === 'daily'">
+      <!-- 健身计划列表 -->
+      <WorkoutList
+        :workouts="workouts"
+        @toggle-complete="handleToggleComplete"
+        @edit="handleEdit"
+        @delete="handleDelete"
+      />
 
-    <!-- 底部统计信息 -->
-    <StatisticsBar
-      :total="totalWorkouts"
-      :completed="completedWorkouts"
-      :completion-rate="completionRate"
-    />
+      <!-- 添加按钮 -->
+      <AddWorkoutButton @click="openAddModal" />
 
-    <!-- 添加/编辑模态框 -->
-    <WorkoutModal
-      :show="showModal"
-      :mode="modalMode"
-      :workout="editingWorkout"
-      @save="handleSave"
-      @close="closeModal"
-    />
+      <!-- 底部统计信息 -->
+      <StatisticsBar
+        :total="totalWorkouts"
+        :completed="completedWorkouts"
+        :completion-rate="completionRate"
+      />
+
+      <!-- 添加/编辑模态框 -->
+      <WorkoutModal
+        :show="showModal"
+        :mode="modalMode"
+        :workout="editingWorkout"
+        @save="handleSave"
+        @close="closeModal"
+      />
+    </template>
+
+    <!-- 每周视图 -->
+    <template v-else>
+      <WeeklyPlanner />
+    </template>
   </div>
 </template>
 
@@ -43,6 +57,7 @@ import WorkoutList from './components/WorkoutList.vue';
 import AddWorkoutButton from './components/AddWorkoutButton.vue';
 import StatisticsBar from './components/StatisticsBar.vue';
 import WorkoutModal from './components/WorkoutModal.vue';
+import WeeklyPlanner from './components/WeeklyPlanner.vue';
 
 // 使用 composables
 const {
@@ -62,6 +77,9 @@ useDailyReset();
 const showModal = ref(false);
 const modalMode = ref<EditMode>('add');
 const editingWorkout = ref<WorkoutItem | undefined>(undefined);
+
+// 视图模式
+const viewMode = ref<'daily' | 'weekly'>('weekly');
 
 // 打开添加模态框
 function openAddModal() {
@@ -116,7 +134,8 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow: hidden;
+  /* 允许页面按需滚动，避免被整体裁切 */
+  overflow: auto;
 }
 
 #app {
@@ -130,7 +149,30 @@ body {
   background: linear-gradient(135deg, #ff6b6b 0%, #feca57 100%);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  /* 允许纵向滚动以容纳更丰富内容 */
+  overflow-y: auto;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  padding: 0 1.5rem 0.75rem;
+}
+
+.toggle-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 999px;
+  background: #f5f5f5;
+  color: #333;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.toggle-btn.active {
+  background: linear-gradient(135deg, #0984e3 0%, #00b894 100%);
+  color: white;
 }
 
 /* 滚动条样式 */
